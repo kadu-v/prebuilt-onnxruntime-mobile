@@ -1,0 +1,171 @@
+[env]
+ONNXRUNTIME_DIR_PATH = "onnxruntime"
+DEST_DIR_PATH = "build/onnxruntime"
+DEST_APPLE_DIR_PATH = "${DEST_DIR_PATH}/apple"
+DEST_ANDROID_DIR_PATH = "${DEST_DIR_PATH}/android"
+
+[config]
+default_to_workspace = false
+
+
+[tasks.clean]
+category = "onnxruntime"
+clear = true
+description = "Clean build artifacts"
+script = """
+#!/usr/bin/env bash
+echo "🔥 Cleaning build artifacts..."
+(
+    cd ${ONNXRUNTIME_DIR_PATH}
+    rm -rf build
+)
+"""
+
+[tasks.clean-ios]
+category = "onnxruntime"
+description = "Clean iOS build artifacts"
+alias = "clean"
+
+[tasks.clean-ios-sim]
+category = "onnxruntime"
+description = "Clean iOS simulator build artifacts"
+alias = "clean"
+
+[tasks.clean-ios-sim-x86_64]
+category = "onnxruntime"
+description = "Clean iOS simulator x86_64 build artifacts"
+alias = "clean"
+
+[tasks.clean-macosx]
+category = "onnxruntime"
+description = "Clean macOS build artifacts"
+alias = "clean"
+
+[tasks.all]
+category = "onnxruntime"
+description = "Build all binaries"
+dependencies = ["ios", "ios-sim", "ios-sim-x86_64", "macosx"]
+
+
+[tasks.ios]
+category = "onnxruntime"
+description = "Build iOS binaries"
+clear = true
+dependencies = ["clean-ios"]
+script = """
+#!/usr/bin/env bash
+echo "📱 Building iOS binaries..."
+(
+    cd ${ONNXRUNTIME_DIR_PATH}
+    ./build.sh --config Release \
+        --use_xcode \
+        --ios \
+        --apple_sysroot iphoneos \
+        --osx_arch arm64 \
+        --apple_deploy_target 16.4 \
+        --build_apple_framework \
+        --use_coreml \
+        --no_kleidiai \
+        --use_xnnpack
+)
+
+echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
+mkdir -p ${DEST_APPLE_DIR_PATH}/ios64
+
+echo "🚚 Copying built iOS framework to destination directory..."
+cp ${ONNXRUNTIME_DIR_PATH}/build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime \
+    ${DEST_APPLE_DIR_PATH}/ios64/libonnxruntime.a
+"""
+
+
+[tasks.ios-sim]
+category = "onnxruntime"
+description = "Build iOS simulator binaries"
+clear = true
+dependencies = ["clean-ios-sim"]
+script = """
+#!/usr/bin/env bash
+echo "📱 Building iOS simulator binaries..."
+(
+    cd ${ONNXRUNTIME_DIR_PATH}
+    ./build.sh \
+        --config Release \
+        --use_xcode \
+        --ios \
+        --apple_sysroot iphonesimulator \
+        --osx_arch arm64 \
+        --apple_deploy_target 16.4 \
+        --build_apple_framework \
+        --use_coreml \
+        --no_kleidiai \
+        --use_xnnpack
+)
+
+echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
+mkdir -p ${DEST_APPLE_DIR_PATH}/simulator-arm64
+
+echo "🚚 Copying built iOS framework to destination directory..."
+cp ${ONNXRUNTIME_DIR_PATH}/build/iOS/Release/Release-iphonesimulator/static_framework/onnxruntime.framework/onnxruntime \
+    ${DEST_APPLE_DIR_PATH}/simulator-arm64/libonnxruntime.a
+"""
+
+
+[tasks.ios-sim-x86_64]
+category = "onnxruntime"
+description = "Build iOS simulator x86_64 binaries"
+dependencies = ["clean-ios-sim-x86_64"]
+script = """
+#!/usr/bin/env bash
+echo "📱 Building iOS simulator x86_64 binaries..."
+(
+    cd ${ONNXRUNTIME_DIR_PATH}
+    ./build.sh \
+        --config Release \
+        --use_xcode --ios \
+        --apple_sysroot iphonesimulator \
+        --osx_arch x86_64 \
+        --apple_deploy_target 16.4 \
+        --build_apple_framework \
+        --use_coreml \
+        --no_kleidiai \
+        --use_xnnpack
+)
+
+echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
+mkdir -p ${DEST_APPLE_DIR_PATH}/simulator-x86_64
+
+echo "🚚 Copying built iOS framework to destination directory..."
+cp ${ONNXRUNTIME_DIR_PATH}/build/iOS/Release/Release-iphonesimulator/static_framework/onnxruntime.framework/onnxruntime \
+    ${DEST_APPLE_DIR_PATH}/simulator-x86_64/libonnxruntime.a
+"""
+
+
+[tasks.macosx]
+category = "onnxruntime"
+description = "Build macOS binaries"
+dependencies = ["clean-macosx"]
+script = """
+#!/usr/bin/env bash
+echo "💻 Building macOS binaries..."
+(
+    cd ${ONNXRUNTIME_DIR_PATH}
+    ./build.sh \
+        --config Release \
+        --use_xcode \
+        --macos MacOSX \
+        --apple_deploy_target 15.0 \
+        --apple_sysroot macosx \
+        --build_apple_framework \
+        --use_coreml \
+        --no_kleidiai \
+        --use_vcpkg \
+        --use_xnnpack
+)
+
+echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
+mkdir -p ${DEST_APPLE_DIR_PATH}/macosx
+
+echo "🚚 Copying built iOS framework to destination directory..."
+cp ${ONNXRUNTIME_DIR_PATH}/build/MacOS/Release/Release-macosx/static_framework/onnxruntime.framework/onnxruntime \
+    ${DEST_APPLE_DIR_PATH}/macosx/libonnxruntime.a
+"""
