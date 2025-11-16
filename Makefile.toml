@@ -70,11 +70,11 @@ echo "📱 Building iOS binaries..."
 )
 
 echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
-mkdir -p ${DEST_APPLE_DIR_PATH}/ios64
+mkdir -p ${DEST_APPLE_DIR_PATH}/ios64/lib
 
 echo "🚚 Copying built iOS framework to destination directory..."
 cp ${ONNXRUNTIME_DIR_PATH}/build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime \
-    ${DEST_APPLE_DIR_PATH}/ios64/libonnxruntime.a
+    ${DEST_APPLE_DIR_PATH}/ios64/lib/libonnxruntime.a
 """
 
 
@@ -102,11 +102,11 @@ echo "📱 Building iOS simulator binaries..."
 )
 
 echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
-mkdir -p ${DEST_APPLE_DIR_PATH}/simulator-arm64
+mkdir -p ${DEST_APPLE_DIR_PATH}/simulator-arm64/lib
 
 echo "🚚 Copying built iOS framework to destination directory..."
 cp ${ONNXRUNTIME_DIR_PATH}/build/iOS/Release/Release-iphonesimulator/static_framework/onnxruntime.framework/onnxruntime \
-    ${DEST_APPLE_DIR_PATH}/simulator-arm64/libonnxruntime.a
+    ${DEST_APPLE_DIR_PATH}/simulator-arm64/lib/libonnxruntime.a
 """
 
 
@@ -132,11 +132,11 @@ echo "📱 Building iOS simulator x86_64 binaries..."
 )
 
 echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
-mkdir -p ${DEST_APPLE_DIR_PATH}/simulator-x86_64
+mkdir -p ${DEST_APPLE_DIR_PATH}/simulator-x86_64/lib
 
 echo "🚚 Copying built iOS framework to destination directory..."
 cp ${ONNXRUNTIME_DIR_PATH}/build/iOS/Release/Release-iphonesimulator/static_framework/onnxruntime.framework/onnxruntime \
-    ${DEST_APPLE_DIR_PATH}/simulator-x86_64/libonnxruntime.a
+    ${DEST_APPLE_DIR_PATH}/simulator-x86_64/lib/libonnxruntime.a
 """
 
 
@@ -163,9 +163,9 @@ echo "💻 Building macOS binaries..."
 )
 
 echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
-mkdir -p ${DEST_APPLE_DIR_PATH}/macosx
+mkdir -p ${DEST_APPLE_DIR_PATH}/macosx/lib
 
 echo "🚚 Copying built iOS framework to destination directory..."
 cp ${ONNXRUNTIME_DIR_PATH}/build/MacOS/Release/Release-macosx/static_framework/onnxruntime.framework/onnxruntime \
-    ${DEST_APPLE_DIR_PATH}/macosx/libonnxruntime.a
+    ${DEST_APPLE_DIR_PATH}/macosx/lib/libonnxruntime.a
 """
