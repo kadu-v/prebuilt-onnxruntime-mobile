@@ -1,0 +1,4 @@
+[submodule "onnxruntime"]
+	path = onnxruntime
+	url = git@github.com:kadu-v/onnxruntime.git
+	branch = v1.22.0-fix
