@@ -8,6 +8,13 @@ DEST_ANDROID_DIR_PATH = "${DEST_DIR_PATH}/android"
 default_to_workspace = false
 
 
+[tasks.show]
+category = "sdk"
+description = "Show available tasks"
+script = """
+cargo make --makefile Makefile.toml --list-category-steps onnxruntime
+"""
+
 [tasks.clean]
 category = "onnxruntime"
 clear = true
@@ -40,6 +47,12 @@ alias = "clean"
 category = "onnxruntime"
 description = "Clean macOS build artifacts"
 alias = "clean"
+
+[tasks.clean-macosx-python]
+category = "onnxruntime"
+description = "Clean macOS build artifacts"
+alias = "clean"
+
 
 [tasks.all]
 category = "onnxruntime"
@@ -156,10 +169,10 @@ echo "💻 Building macOS binaries..."
         --apple_deploy_target 15.0 \
         --apple_sysroot macosx \
         --build_apple_framework \
+        --use_xnnpack \
         --use_coreml \
         --no_kleidiai \
-        --use_vcpkg \
-        --use_xnnpack
+        --use_vcpkg 
 )
 
 echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
@@ -168,4 +181,41 @@ mkdir -p ${DEST_APPLE_DIR_PATH}/macosx/lib
 echo "🚚 Copying built iOS framework to destination directory..."
 cp ${ONNXRUNTIME_DIR_PATH}/build/MacOS/Release/Release-macosx/static_framework/onnxruntime.framework/onnxruntime \
     ${DEST_APPLE_DIR_PATH}/macosx/lib/libonnxruntime.a
+"""
+
+
+[tasks.macosx-python]
+category = "onnxruntime"
+description = "Build macOS binaries"
+dependencies = ["clean-macosx-python"]
+script = """
+#!/usr/bin/env bash
+echo "💻 Building macOS binaries..."
+(
+    cd ${ONNXRUNTIME_DIR_PATH}
+    ./build.sh \
+        --config Release \
+        --update \
+        --build \
+        --build_shared_lib \
+        --parallel \
+        --compile_no_warning_as_error \
+        --skip_submodule_sync \
+        --use_xnnpack \
+        --use_coreml \
+        --no_kleidiai \
+        --enable_pybind \
+        --build_wheel \
+        --use_vcpkg \
+        --cmake_extra_defines \
+        CMAKE_OSX_ARCHITECTURES=arm64
+
+)
+
+echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
+mkdir -p ${DEST_APPLE_DIR_PATH}/macosx/wheel
+
+echo "🚚 Copying built ONNX Runtime wheel to destination directory..."
+cp ${ONNXRUNTIME_DIR_PATH}/build/MacOS/Release/dist/onnxruntime-*.whl \
+    ${DEST_APPLE_DIR_PATH}/macosx/wheel/
 """
