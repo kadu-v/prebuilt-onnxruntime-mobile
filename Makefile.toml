@@ -53,12 +53,15 @@ category = "onnxruntime"
 description = "Clean macOS build artifacts"
 alias = "clean"
 
+[tasks.clean-linux-python]
+category = "onnxruntime"
+description = "Clean Linux Python build artifacts"
+alias = "clean"
 
 [tasks.all]
 category = "onnxruntime"
 description = "Build all binaries"
 dependencies = ["ios", "ios-sim", "ios-sim-x86_64", "macosx"]
-
 
 [tasks.ios]
 category = "onnxruntime"
@@ -218,4 +221,30 @@ mkdir -p ${DEST_APPLE_DIR_PATH}/macosx/wheel
 echo "🚚 Copying built ONNX Runtime wheel to destination directory..."
 cp ${ONNXRUNTIME_DIR_PATH}/build/MacOS/Release/dist/onnxruntime-*.whl \
     ${DEST_APPLE_DIR_PATH}/macosx/wheel/
+"""
+
+[tasks.linux-python]
+category = "onnxruntime"
+description = "Build macOS binaries"
+dependencies = ["clean-linux-python"]
+script = """
+#!/usr/bin/env bash
+echo "💻 Building macOS binaries..."
+(
+    cd ${ONNXRUNTIME_DIR_PATH}
+    ./build.sh \
+        --config Release \
+        --parallel \
+        --use_xnnpack \
+        --enable_pybind \
+        --build_wheel \
+        --cmake_extra_defines CMAKE_POLICY_VERSION_MINIMUM=3.5
+)
+
+echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
+mkdir -p ${DEST_APPLE_DIR_PATH}/linux/wheel
+
+echo "🚚 Copying built ONNX Runtime wheel to destination directory..."
+cp ${ONNXRUNTIME_DIR_PATH}/build/Linux/Release/dist/onnxruntime-*.whl \
+    ${DEST_APPLE_DIR_PATH}/linux/wheel/
 """
