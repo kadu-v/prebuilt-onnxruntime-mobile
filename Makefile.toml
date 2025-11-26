@@ -7,7 +7,6 @@ DEST_ANDROID_DIR_PATH = "${DEST_DIR_PATH}/android"
 [config]
 default_to_workspace = false
 
-
 [tasks.show]
 category = "sdk"
 description = "Show available tasks"
@@ -43,6 +42,11 @@ category = "onnxruntime"
 description = "Clean iOS simulator x86_64 build artifacts"
 alias = "clean"
 
+[tasks.clean-android]
+category = "onnxruntime"
+description = "Clean Android build artifacts"
+alias = "clean"
+
 [tasks.clean-macosx]
 category = "onnxruntime"
 description = "Clean macOS build artifacts"
@@ -61,7 +65,7 @@ alias = "clean"
 [tasks.all]
 category = "onnxruntime"
 description = "Build all binaries"
-dependencies = ["ios", "ios-sim", "ios-sim-x86_64", "macosx"]
+dependencies = ["ios", "ios-sim", "ios-sim-x86_64", "macosx", "android"]
 
 [tasks.ios]
 category = "onnxruntime"
@@ -92,7 +96,6 @@ echo "🚚 Copying built iOS framework to destination directory..."
 cp ${ONNXRUNTIME_DIR_PATH}/build/iOS/Release/Release-iphoneos/static_framework/onnxruntime.framework/onnxruntime \
     ${DEST_APPLE_DIR_PATH}/ios64/lib/libonnxruntime.a
 """
-
 
 [tasks.ios-sim]
 category = "onnxruntime"
@@ -125,7 +128,6 @@ cp ${ONNXRUNTIME_DIR_PATH}/build/iOS/Release/Release-iphonesimulator/static_fram
     ${DEST_APPLE_DIR_PATH}/simulator-arm64/lib/libonnxruntime.a
 """
 
-
 [tasks.ios-sim-x86_64]
 category = "onnxruntime"
 description = "Build iOS simulator x86_64 binaries"
@@ -154,7 +156,6 @@ echo "🚚 Copying built iOS framework to destination directory..."
 cp ${ONNXRUNTIME_DIR_PATH}/build/iOS/Release/Release-iphonesimulator/static_framework/onnxruntime.framework/onnxruntime \
     ${DEST_APPLE_DIR_PATH}/simulator-x86_64/lib/libonnxruntime.a
 """
-
 
 [tasks.macosx]
 category = "onnxruntime"
@@ -185,7 +186,6 @@ echo "🚚 Copying built iOS framework to destination directory..."
 cp ${ONNXRUNTIME_DIR_PATH}/build/MacOS/Release/Release-macosx/static_framework/onnxruntime.framework/onnxruntime \
     ${DEST_APPLE_DIR_PATH}/macosx/lib/libonnxruntime.a
 """
-
 
 [tasks.macosx-python]
 category = "onnxruntime"
@@ -247,4 +247,36 @@ mkdir -p ${DEST_APPLE_DIR_PATH}/linux/wheel
 echo "🚚 Copying built ONNX Runtime wheel to destination directory..."
 cp ${ONNXRUNTIME_DIR_PATH}/build/Linux/Release/dist/onnxruntime-*.whl \
     ${DEST_APPLE_DIR_PATH}/linux/wheel/
+"""
+
+[tasks.android]
+category = "onnxruntime"
+description = "Build Android binaries"
+env_files = ["./android.env"]
+env.ANDROID_NDK_HOME = "${ANDROID_SDK_HOME}/ndk/${ANDROID_NDK_VERSION}"
+clear = true
+# dependencies = ["clean-android"]
+script = """
+#!/usr/bin/env bash
+echo "🤖 Building Android binaries..."
+
+(
+    cd ${ONNXRUNTIME_DIR_PATH}
+    # ./build.sh \
+    #     --android \
+    #     --android_sdk_path ${ANDROID_SDK_HOME} \
+    #     --android_ndk_path ${ANDROID_NDK_HOME} \
+    #     --android_abi arm64-v8a \
+    #     --android_api 27 \
+    #     --use_xnnpack \
+    #     --config Release \
+    #     --build_shared_lib
+)
+
+echo "📂 Creating destination directory at ${DEST_ANDROID_DIR_PATH}..."
+mkdir -p ${DEST_ANDROID_DIR_PATH}/arm64-v8a/lib
+
+echo "🚚 Copying built ONNX Runtime wheel to destination directory..."
+cp ${ONNXRUNTIME_DIR_PATH}/build/Android/Release/libonnxruntime.so \
+    ${DEST_ANDROID_DIR_PATH}/arm64-v8a/lib/libonnxruntime.so
 """
