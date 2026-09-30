@@ -40,19 +40,11 @@ jobs:
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
           df -h /
 
-      - name: Free disk space (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          # Remove Xcode versions other than the selected one and the unused Android SDK
-          current_xcode="$(realpath "$(xcode-select -p)/../..")"
-          echo "Keeping ${current_xcode}"
-          for app in /Applications/Xcode*.app; do
-            if [ ! -L "${app}" ] && [ "$(realpath "${app}")" != "${current_xcode}" ]; then
-              sudo rm -rf "${app}"
-            fi
-          done
-          rm -rf "${HOME}/Library/Android"
-          df -h /
+      # The runner's Homebrew CMake (4.x) breaks vcpkg port builds (e.g. benchmark), so pin CMake 3.x
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: "3.31.x"
 
       - name: Setup uv
         uses: astral-sh/setup-uv@v6
