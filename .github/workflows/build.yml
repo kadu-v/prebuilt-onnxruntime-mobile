@@ -40,7 +40,7 @@ jobs:
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
           df -h /
 
-      # The runner's Homebrew CMake (4.x) breaks vcpkg port builds (e.g. benchmark), so pin CMake 3.x
+      # Pin CMake 3.x for all jobs (the runner's Homebrew CMake is 4.x; local builds use 3.29)
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v2
         with:
@@ -66,8 +66,10 @@ jobs:
           printf 'ANDROID_SDK_HOME="%s"\nANDROID_NDK_VERSION="%s"\n' "${ANDROID_HOME}" "${ndk_version}" > android.env
           cat android.env
 
+      # Unset the runner's preinstalled vcpkg so build.py clones the vcpkg release pinned by ONNX Runtime
+      # (same as local builds). The preinstalled one picks up Homebrew's CMake 4.x and fails.
       - name: Build
-        run: uv run cargo make ${{ matrix.task }}
+        run: env -u VCPKG_INSTALLATION_ROOT uv run cargo make ${{ matrix.task }}
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4
