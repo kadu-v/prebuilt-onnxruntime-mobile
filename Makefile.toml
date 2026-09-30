@@ -1,6 +1,7 @@
 [env]
 ONNXRUNTIME_DIR_PATH = "onnxruntime"
-DEST_DIR_PATH = "build/onnxruntime"
+ORT_VERSION = "v1.28.0"
+DEST_DIR_PATH = "build/${ORT_VERSION}/onnxruntime"
 DEST_APPLE_DIR_PATH = "${DEST_DIR_PATH}/apple"
 DEST_ANDROID_DIR_PATH = "${DEST_DIR_PATH}/android"
 
@@ -64,8 +65,8 @@ alias = "clean"
 
 [tasks.all]
 category = "onnxruntime"
-description = "Build all binaries"
-dependencies = ["ios", "ios-sim", "ios-sim-x86_64", "macosx", "android"]
+description = "Build all binaries and package them"
+dependencies = ["ios", "ios-sim", "ios-sim-x86_64", "macosx", "android", "package"]
 
 [tasks.ios]
 category = "onnxruntime"
@@ -86,7 +87,8 @@ echo "📱 Building iOS binaries..."
         --build_apple_framework \
         --use_coreml \
         --no_kleidiai \
-        --use_xnnpack
+        --use_xnnpack \
+        --parallel
 )
 
 echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
@@ -117,7 +119,8 @@ echo "📱 Building iOS simulator binaries..."
         --build_apple_framework \
         --use_coreml \
         --no_kleidiai \
-        --use_xnnpack
+        --use_xnnpack \
+        --parallel
 )
 
 echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
@@ -146,7 +149,8 @@ echo "📱 Building iOS simulator x86_64 binaries..."
         --build_apple_framework \
         --use_coreml \
         --no_kleidiai \
-        --use_xnnpack
+        --use_xnnpack \
+        --parallel
 )
 
 echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
@@ -176,7 +180,8 @@ echo "💻 Building macOS binaries..."
         --use_xnnpack \
         --use_coreml \
         --no_kleidiai \
-        --use_vcpkg 
+        --use_vcpkg \
+        --parallel
 )
 
 echo "📂 Creating destination directory at ${DEST_APPLE_DIR_PATH}..."
@@ -255,22 +260,23 @@ description = "Build Android binaries"
 env_files = ["./android.env"]
 env.ANDROID_NDK_HOME = "${ANDROID_SDK_HOME}/ndk/${ANDROID_NDK_VERSION}"
 clear = true
-# dependencies = ["clean-android"]
+dependencies = ["clean-android"]
 script = """
 #!/usr/bin/env bash
 echo "🤖 Building Android binaries..."
 
 (
     cd ${ONNXRUNTIME_DIR_PATH}
-    # ./build.sh \
-    #     --android \
-    #     --android_sdk_path ${ANDROID_SDK_HOME} \
-    #     --android_ndk_path ${ANDROID_NDK_HOME} \
-    #     --android_abi arm64-v8a \
-    #     --android_api 27 \
-    #     --use_xnnpack \
-    #     --config Release \
-    #     --build_shared_lib
+    ./build.sh \
+        --android \
+        --android_sdk_path ${ANDROID_SDK_HOME} \
+        --android_ndk_path ${ANDROID_NDK_HOME} \
+        --android_abi arm64-v8a \
+        --android_api 27 \
+        --use_xnnpack \
+        --config Release \
+        --build_shared_lib \
+        --parallel
 )
 
 echo "📂 Creating destination directory at ${DEST_ANDROID_DIR_PATH}..."
@@ -279,4 +285,65 @@ mkdir -p ${DEST_ANDROID_DIR_PATH}/arm64-v8a/lib
 echo "🚚 Copying built ONNX Runtime wheel to destination directory..."
 cp ${ONNXRUNTIME_DIR_PATH}/build/Android/Release/libonnxruntime.so \
     ${DEST_ANDROID_DIR_PATH}/arm64-v8a/lib/libonnxruntime.so
+"""
+
+[tasks.package]
+category = "onnxruntime"
+clear = true
+description = "Verify built binaries and package them in edge-vision-toolkit sdk/third_party/onnxruntime layout"
+script = """
+#!/usr/bin/env bash
+set -euo pipefail
+
+PKG_ROOT="$(dirname ${DEST_DIR_PATH})"
+ZIP_PATH="${PKG_ROOT}/onnxruntime-${ORT_VERSION}.zip"
+
+# path:expected-architecture
+EXPECTED=(
+    "apple/ios64/lib/libonnxruntime.a:arm64"
+    "apple/simulator-arm64/lib/libonnxruntime.a:arm64"
+    "apple/simulator-x86_64/lib/libonnxruntime.a:x86_64"
+    "apple/macosx/lib/libonnxruntime.a:arm64"
+    "android/arm64-v8a/lib/libonnxruntime.so:aarch64"
+)
+
+echo "🔍 Verifying binaries in ${DEST_DIR_PATH}..."
+missing=0
+for entry in "${EXPECTED[@]}"; do
+    rel="${entry%%:*}"
+    arch="${entry##*:}"
+    path="${DEST_DIR_PATH}/${rel}"
+    if [ ! -f "${path}" ]; then
+        echo "  ❌ missing: ${rel}"
+        missing=1
+        continue
+    fi
+    if [[ "${rel}" == *.a ]]; then
+        info="$(lipo -info "${path}")"
+    else
+        info="$(file "${path}")"
+    fi
+    if ! grep -qi "${arch}" <<< "${info}"; then
+        echo "  ❌ unexpected architecture (want ${arch}): ${rel}"
+        echo "     ${info}"
+        missing=1
+        continue
+    fi
+    echo "  ✅ ${rel} ($(du -h "${path}" | cut -f1), ${arch})"
+done
+if [ "${missing}" -ne 0 ]; then
+    echo "🚨 Some binaries are missing or invalid. Run the corresponding build tasks first." >&2
+    exit 1
+fi
+
+echo "📦 Creating ${ZIP_PATH}..."
+rm -f "${ZIP_PATH}"
+(
+    cd "${PKG_ROOT}"
+    zip -qry "$(basename ${ZIP_PATH})" onnxruntime
+)
+
+echo "🎉 Done."
+echo "   folder: ${DEST_DIR_PATH}  ->  copy to edge-vision-toolkit/sdk/third_party/onnxruntime"
+echo "   zip   : ${ZIP_PATH}"
 """
