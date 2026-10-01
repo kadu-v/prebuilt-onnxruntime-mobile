@@ -87,7 +87,6 @@ echo "📱 Building iOS binaries..."
         --build_apple_framework \
         --use_coreml \
         --no_kleidiai \
-        --use_xnnpack \
         --parallel
 )
 
@@ -119,7 +118,6 @@ echo "📱 Building iOS simulator binaries..."
         --build_apple_framework \
         --use_coreml \
         --no_kleidiai \
-        --use_xnnpack \
         --parallel
 )
 
@@ -149,7 +147,6 @@ echo "📱 Building iOS simulator x86_64 binaries..."
         --build_apple_framework \
         --use_coreml \
         --no_kleidiai \
-        --use_xnnpack \
         --parallel
 )
 
@@ -177,7 +174,6 @@ echo "💻 Building macOS binaries..."
         --apple_deploy_target 15.0 \
         --apple_sysroot macosx \
         --build_apple_framework \
-        --use_xnnpack \
         --use_coreml \
         --no_kleidiai \
         --use_vcpkg \

@@ -26,5 +26,7 @@ Every task deletes `onnxruntime/build`, so run the tasks one at a time.
 | Target | Main flags |
 | --- | --- |
 | Android | `--android_abi arm64-v8a --android_api 27 --use_xnnpack --build_shared_lib` (NDK: `android.env`) |
-| iOS / Simulator | `--ios --apple_deploy_target 16.4 --build_apple_framework --use_coreml --use_xnnpack --no_kleidiai` |
-| macOS | `--macos MacOSX --apple_deploy_target 15.0 --build_apple_framework --use_coreml --use_xnnpack --no_kleidiai --use_vcpkg` |
+| iOS / Simulator | `--ios --apple_deploy_target 16.4 --build_apple_framework --use_coreml --no_kleidiai` |
+| macOS | `--macos MacOSX --apple_deploy_target 15.0 --build_apple_framework --use_coreml --no_kleidiai --use_vcpkg` |
+
+Apple targets are built without XNNPACK: the static libraries go into the same binary as TFLite, whose own XNNPACK would clash with it.
